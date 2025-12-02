@@ -72,9 +72,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h1>Bienvenue à l'Espace Naturel de la Motte</h1>
         <nav>
             <ul>
-                <li><a href="index.html#presentation">Présentation</a></li>
-                <li><a href="index.html#faune-flore">Faune et Flore</a></li>
-                <li><a href="index.html#activites">Activités</a></li>
+                <li><a href="#presentation">Présentation</a></li>
+                <li><a href="#gallerie">Galerie</a></li>
+                <li><a href="voter.php">Voter</a></li>
                 <li><a href="formulaire.php">Participez</a></li>
             </ul>
         </nav>
