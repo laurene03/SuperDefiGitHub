@@ -7,6 +7,10 @@
     --white: #fff;
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
 /* Style de base */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
