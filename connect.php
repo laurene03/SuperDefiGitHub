@@ -1,4 +1,6 @@
+<?php
 $host = 'localhost'; //Hébergement local
-$dbname = 'Groupe1';
-$username = 'root'
+$dbname = 'defigithub';
+$username = 'root';
 $password = 'root'; //Par défaut sur MAMP
+?>

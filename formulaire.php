@@ -1,22 +1,43 @@
 <?php
+require_once 'connect.php';
+
 $message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = filter_var($_POST['email'] ?? '', FILTER_VALIDATE_EMAIL);
+    $name = htmlspecialchars(trim($_POST['name'] ?? ''));
     $uploadDir = 'images/';
-    $uploadFile = $uploadDir . basename($_FILES['image']['name']);
+    $fileName = basename($_FILES['image']['name']);
+    
+    // Rename file to avoid collisions and ensure safety (timestamp prefix)
+    $newFileName = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $fileName);
+    $uploadFile = $uploadDir . $newFileName;
+    
     $imageFileType = strtolower(pathinfo($uploadFile, PATHINFO_EXTENSION));
     $allowedTypes = ['jpg', 'jpeg', 'png', 'gif'];
 
     if (!$email) {
         $message = 'Adresse e-mail invalide.';
-    } elseif (file_exists($uploadFile)) {
-        $message = 'Désolé, le fichier image existe déjà.';
+    } elseif (empty($name)) {
+        $message = 'Veuillez entrer votre nom.';
     } elseif (!in_array($imageFileType, $allowedTypes)) {
         $message = 'Désolé, seuls les fichiers JPG, JPEG, PNG & GIF sont autorisés.';
     } elseif ($_FILES['image']['size'] > 5000000) { // 5MB
         $message = 'Désolé, votre fichier est trop volumineux.';
     } elseif (move_uploaded_file($_FILES['image']['tmp_name'], $uploadFile)) {
-        $message = 'Le fichier ' . htmlspecialchars(basename($_FILES['image']['name'])) . ' a été téléversé avec succès.';
+        // Insert into database
+        try {
+            $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            
+            $stmt = $pdo->prepare("INSERT INTO photos (filename, uploader_name, uploader_email) VALUES (?, ?, ?)");
+            $stmt->execute([$newFileName, $name, $email]);
+            
+            $message = 'Le fichier a été téléversé avec succès et ajouté à la galerie !';
+        } catch (PDOException $e) {
+            $message = 'Erreur lors de l\'enregistrement en base de données : ' . $e->getMessage();
+            // Optionally delete the file if DB insert fails
+            unlink($uploadFile);
+        }
     } else {
         $message = 'Désolé, une erreur s\'est produite lors du téléversement de votre fichier.';
     }
@@ -33,35 +54,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .form-container {
             max-width: 600px;
             margin: 20px auto;
-            padding: 20px;
+            padding: 30px;
             background: #fff;
-            border-radius: 8px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
         }
+        .form-container label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .form-container input[type="text"],
         .form-container input[type="email"],
         .form-container input[type="file"] {
             width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 5px;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 6px;
             border: 1px solid #ccc;
+            box-sizing: border-box; /* Fix padding issue */
         }
         .form-container input[type="submit"] {
             background-color: var(--primary-color);
             color: white;
-            padding: 10px 20px;
+            padding: 12px 25px;
             border: none;
-            border-radius: 5px;
+            border-radius: 50px;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 1.1rem;
+            width: 100%;
+            transition: var(--transition);
         }
         .form-container input[type="submit"]:hover {
             background-color: var(--secondary-color);
+            transform: translateY(-2px);
         }
         .message {
             padding: 15px;
             margin-bottom: 20px;
-            border-radius: 5px;
+            border-radius: 6px;
             color: #fff;
+            text-align: center;
         }
         .message.success { background-color: #28a745; }
         .message.error { background-color: #dc3545; }
@@ -72,8 +105,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h1>Bienvenue à l'Espace Naturel de la Motte</h1>
         <nav>
             <ul>
-                <li><a href="#presentation">Présentation</a></li>
-                <li><a href="#gallerie">Galerie</a></li>
+                <li><a href="index.php">Accueil</a></li>
+                <li><a href="index.php#presentation">Présentation</a></li>
+                <li><a href="index.php#gallerie">Galerie</a></li>
                 <li><a href="voter.php">Voter</a></li>
                 <li><a href="formulaire.php">Participez</a></li>
             </ul>
@@ -91,8 +125,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 <?php endif; ?>
                 <form action="formulaire.php" method="post" enctype="multipart/form-data">
+                    <label for="name">Votre nom :</label>
+                    <input type="text" id="name" name="name" required placeholder="Jean Dupont">
+
                     <label for="email">Votre adresse e-mail :</label>
-                    <input type="email" id="email" name="email" required>
+                    <input type="email" id="email" name="email" required placeholder="jean.dupont@example.com">
                     
                     <label for="image">Sélectionnez une image :</label>
                     <input type="file" id="image" name="image" accept="image/*" required>
