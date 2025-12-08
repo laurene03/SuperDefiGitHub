@@ -1,18 +1,15 @@
 <?php
 require_once 'connect.php';
 
-// Fetch images from database
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // Limit to 8 images for the homepage
+    // Limit de 8
     $stmt = $pdo->query("SELECT * FROM photos ORDER BY created_at DESC LIMIT 8");
     $photos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     $photos = [];
-    // Fallback to scanning directory if DB fails or is empty (optional, but good for transition)
-    // For now, let's stick to DB as primary.
 }
 ?>
 <!DOCTYPE html>
@@ -78,7 +75,6 @@ try {
         <p>&copy; 2025 Espace Naturel de la Motte. Tous droits réservés.</p>
     </footer>
 
-    <!-- Modal for Focus View -->
     <div id="imageModal" class="modal">
         <span class="close" onclick="closeModal()">&times;</span>
         <div class="modal-content-wrapper">
@@ -96,9 +92,6 @@ try {
             modal.style.display = "block";
             modalImg.src = "images/" + filename;
             captionText.innerHTML = "Posté par : " + uploaderName;
-            
-            // Fetch vote count (AJAX could be used here, but for simplicity we might skip dynamic vote count on home modal for now or implement a simple fetch)
-            // For now, just showing the image and uploader.
         }
 
         function closeModal() {
@@ -106,7 +99,6 @@ try {
             modal.style.display = "none";
         }
 
-        // Close modal when clicking outside
         window.onclick = function(event) {
             var modal = document.getElementById("imageModal");
             if (event.target == modal) {

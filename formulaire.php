@@ -8,7 +8,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $uploadDir = 'images/';
     $fileName = basename($_FILES['image']['name']);
     
-    // Rename file to avoid collisions and ensure safety (timestamp prefix)
     $newFileName = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $fileName);
     $uploadFile = $uploadDir . $newFileName;
     
@@ -24,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($_FILES['image']['size'] > 5000000) { // 5MB
         $message = 'Désolé, votre fichier est trop volumineux.';
     } elseif (move_uploaded_file($_FILES['image']['tmp_name'], $uploadFile)) {
-        // Insert into database
+
         try {
             $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -35,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message = 'Le fichier a été téléversé avec succès et ajouté à la galerie !';
         } catch (PDOException $e) {
             $message = 'Erreur lors de l\'enregistrement en base de données : ' . $e->getMessage();
-            // Optionally delete the file if DB insert fails
+
             unlink($uploadFile);
         }
     } else {
