@@ -272,3 +272,20 @@ footer {
         width: 95%;
     }
 }
+
+/* Style pour la galerie d'images sur l'index */
+.gallery-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    padding: 20px;
+}
+
+.gallery-item img {
+    width: 300px;        /* Largeur fixe pour toutes les images */
+    height: 200px;       /* Hauteur fixe pour l'alignement */
+    object-fit: cover;   /* Coupe l'image sans la déformer pour remplir le cadre */
+    border-radius: 8px;  /* Optionnel : arrondit les coins */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
