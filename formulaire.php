@@ -1,27 +1,42 @@
 <?php
+require_once 'connect.php';
+
 $message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $nom = htmlspecialchars($_POST['nom'] ?? 'Anonyme'); 
     $email = filter_var($_POST['email'] ?? '', FILTER_VALIDATE_EMAIL);
+    
     $uploadDir = 'images/';
-    $uploadFile = $uploadDir . basename($_FILES['image']['name']);
+    $nomFichier = basename($_FILES['image']['name']);
+    $uploadFile = $uploadDir . $nomFichier;
     $imageFileType = strtolower(pathinfo($uploadFile, PATHINFO_EXTENSION));
-    $allowedTypes = ['jpg', 'jpeg', 'png', 'gif'];
 
     if (!$email) {
         $message = 'Adresse e-mail invalide.';
-    } elseif (file_exists($uploadFile)) {
-        $message = 'Désolé, le fichier image existe déjà.';
-    } elseif (!in_array($imageFileType, $allowedTypes)) {
-        $message = 'Désolé, seuls les fichiers JPG, JPEG, PNG & GIF sont autorisés.';
-    } elseif ($_FILES['image']['size'] > 5000000) { // 5MB
-        $message = 'Désolé, votre fichier est trop volumineux.';
-    } elseif (move_uploaded_file($_FILES['image']['tmp_name'], $uploadFile)) {
-        $message = 'Le fichier ' . htmlspecialchars(basename($_FILES['image']['name'])) . ' a été téléversé avec succès.';
     } else {
-        $message = 'Désolé, une erreur s\'est produite lors du téléversement de votre fichier.';
+        if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadFile)) {
+            
+            try {
+                $sql = "INSERT INTO participations (nomdelapersonne, adressedufichier, mail) 
+                        VALUES (:nom, :adresse, :mail)";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([
+                    ':nom'     => $nom,
+                    ':adresse' => $uploadFile,
+                    ':mail'    => $email
+                ]);
+                $message = 'Succès ! Votre participation a bien été ajoutée à la base de données.';
+            } catch (PDOException $e) {
+                $message = 'Erreur SQL : ' . $e->getMessage();
+            }
+
+        } else {
+            $message = 'Erreur lors du transfert de l\'image.';
+        }
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
