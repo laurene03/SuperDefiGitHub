@@ -16,19 +16,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadFile)) {
             
-            try {
-                $sql = "INSERT INTO participations (nomdelapersonne, adressedufichier, mail) 
-                        VALUES (:nom, :adresse, :mail)";
-                $stmt = $pdo->prepare($sql);
-                $stmt->execute([
-                    ':nom'     => $nom,
-                    ':adresse' => $uploadFile,
-                    ':mail'    => $email
-                ]);
-                $message = 'Succès ! Votre participation a bien été ajoutée à la base de données.';
-            } catch (PDOException $e) {
-                $message = 'Erreur SQL : ' . $e->getMessage();
-            }
+try {
+    $sql = "INSERT INTO photos (uploader_name, filename, uploader_email) 
+            VALUES (:nom, :adresse, :mail)";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([
+        ':nom'     => $nom,
+        ':adresse' => $nomFichier, // On enregistre seulement le nom du fichier
+        ':mail'    => $email
+    ]);
+    $message = 'Succès ! Votre participation a bien été ajoutée à la base de données.';
+} catch (PDOException $e) {
+    $message = 'Erreur SQL : ' . $e->getMessage();
+}
 
         } else {
             $message = 'Erreur lors du transfert de l\'image.';
@@ -87,9 +87,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h1>Bienvenue à l'Espace Naturel de la Motte</h1>
         <nav>
             <ul>
-                <li><a href="index.html#presentation">Présentation</a></li>
-                <li><a href="index.html#faune-flore">Faune et Flore</a></li>
-                <li><a href="index.html#activites">Activités</a></li>
+                <li><a href="index.php">Accueil</a></li>
+                <li><a href="#presentation">Présentation</a></li>
+                <li><a href="#gallerie">Galerie</a></li>
+                <li><a href="voter.php">Voter</a></li>
                 <li><a href="formulaire.php">Participez</a></li>
             </ul>
         </nav>
