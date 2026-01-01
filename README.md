@@ -21,4 +21,4 @@ Ce projet consiste à réaliser un site internet pour un concours de photos orni
 - [ ] Espace Photos soumises au concours
 - [ ] Formulaire de vote (nom, btn submit)
 - [ ] CSS
-      Lien Always Data: https://dulormne.alwaysdata.net/groupe1/
+- [ ] Lien Always Data: https://dulormne.alwaysdata.net/groupe1/
