@@ -3,45 +3,40 @@ require_once 'connect.php';
 
 $message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $nom = htmlspecialchars($_POST['nom'] ?? 'Anonyme'); 
     $email = filter_var($_POST['email'] ?? '', FILTER_VALIDATE_EMAIL);
-    $name = htmlspecialchars(trim($_POST['name'] ?? ''));
+    
     $uploadDir = 'images/';
-    $fileName = basename($_FILES['image']['name']);
-    
-    $newFileName = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $fileName);
-    $uploadFile = $uploadDir . $newFileName;
-    
+    $nomFichier = basename($_FILES['image']['name']);
+    $uploadFile = $uploadDir . $nomFichier;
     $imageFileType = strtolower(pathinfo($uploadFile, PATHINFO_EXTENSION));
-    $allowedTypes = ['jpg', 'jpeg', 'png', 'gif'];
 
     if (!$email) {
         $message = 'Adresse e-mail invalide.';
-    } elseif (empty($name)) {
-        $message = 'Veuillez entrer votre nom.';
-    } elseif (!in_array($imageFileType, $allowedTypes)) {
-        $message = 'Désolé, seuls les fichiers JPG, JPEG, PNG & GIF sont autorisés.';
-    } elseif ($_FILES['image']['size'] > 5000000) { // 5MB
-        $message = 'Désolé, votre fichier est trop volumineux.';
-    } elseif (move_uploaded_file($_FILES['image']['tmp_name'], $uploadFile)) {
-
-        try {
-            $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            
-            $stmt = $pdo->prepare("INSERT INTO photos (filename, uploader_name, uploader_email) VALUES (?, ?, ?)");
-            $stmt->execute([$newFileName, $name, $email]);
-            
-            $message = 'Le fichier a été téléversé avec succès et ajouté à la galerie !';
-        } catch (PDOException $e) {
-            $message = 'Erreur lors de l\'enregistrement en base de données : ' . $e->getMessage();
-
-            unlink($uploadFile);
-        }
     } else {
-        $message = 'Désolé, une erreur s\'est produite lors du téléversement de votre fichier.';
+        if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadFile)) {
+            
+try {
+    $sql = "INSERT INTO photos (uploader_name, filename, uploader_email) 
+            VALUES (:nom, :adresse, :mail)";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([
+        ':nom'     => $nom,
+        ':adresse' => $nomFichier, // On enregistre seulement le nom du fichier
+        ':mail'    => $email
+    ]);
+    $message = 'Succès ! Votre participation a bien été ajoutée à la base de données.';
+} catch (PDOException $e) {
+    $message = 'Erreur SQL : ' . $e->getMessage();
+}
+
+        } else {
+            $message = 'Erreur lors du transfert de l\'image.';
+        }
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -53,47 +48,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .form-container {
             max-width: 600px;
             margin: 20px auto;
-            padding: 30px;
+            padding: 20px;
             background: #fff;
-            border-radius: 12px;
-            box-shadow: var(--shadow);
+            border-radius: 8px;
         }
-        .form-container label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-        .form-container input[type="text"],
         .form-container input[type="email"],
         .form-container input[type="file"] {
             width: 100%;
-            padding: 12px;
-            margin-bottom: 20px;
-            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
             border: 1px solid #ccc;
-            box-sizing: border-box; /* Fix padding issue */
         }
         .form-container input[type="submit"] {
             background-color: var(--primary-color);
             color: white;
-            padding: 12px 25px;
+            padding: 10px 20px;
             border: none;
-            border-radius: 50px;
+            border-radius: 5px;
             cursor: pointer;
-            font-size: 1.1rem;
-            width: 100%;
-            transition: var(--transition);
+            font-size: 1rem;
         }
         .form-container input[type="submit"]:hover {
             background-color: var(--secondary-color);
-            transform: translateY(-2px);
         }
         .message {
             padding: 15px;
             margin-bottom: 20px;
-            border-radius: 6px;
+            border-radius: 5px;
             color: #fff;
-            text-align: center;
         }
         .message.success { background-color: #28a745; }
         .message.error { background-color: #dc3545; }
@@ -105,8 +88,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <nav>
             <ul>
                 <li><a href="index.php">Accueil</a></li>
-                <li><a href="index.php#presentation">Présentation</a></li>
-                <li><a href="index.php#gallerie">Galerie</a></li>
+                <li><a href="#presentation">Présentation</a></li>
+                <li><a href="#gallerie">Galerie</a></li>
                 <li><a href="voter.php">Voter</a></li>
                 <li><a href="formulaire.php">Participez</a></li>
             </ul>
@@ -124,11 +107,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 <?php endif; ?>
                 <form action="formulaire.php" method="post" enctype="multipart/form-data">
-                    <label for="name">Votre nom :</label>
-                    <input type="text" id="name" name="name" required placeholder="Jean Dupont">
-
                     <label for="email">Votre adresse e-mail :</label>
-                    <input type="email" id="email" name="email" required placeholder="jean.dupont@example.com">
+                    <input type="email" id="email" name="email" required>
                     
                     <label for="image">Sélectionnez une image :</label>
                     <input type="file" id="image" name="image" accept="image/*" required>
