@@ -8,14 +8,9 @@ try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // Handle Vote
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['photo_id'])) {
         $photoId = (int)$_POST['photo_id'];
         $voterIp = $_SERVER['REMOTE_ADDR'];
-
-        // Check if IP has already voted (Global limit: one vote per person for ANY photo)
-        // Or per photo? "voté a une image par personne" -> usually means 1 vote total.
-        // Let's assume 1 vote total for the contest based on phrasing.
         
         $checkStmt = $pdo->prepare("SELECT id FROM votes WHERE voter_ip = ?");
         $checkStmt->execute([$voterIp]);
@@ -32,7 +27,6 @@ try {
         }
     }
 
-    // Fetch all photos with vote count
     $stmt = $pdo->query("
         SELECT p.*, COUNT(v.id) as vote_count 
         FROM photos p 
